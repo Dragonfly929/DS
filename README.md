@@ -22,11 +22,17 @@ The project consists of two microservices:
 1. **User and Palette Management Service**
 2. **Popularity and Recommendation Service**
 
+Each service will have its own dedicated responsibilities and database, ensuring clear boundaries between components.
+
 ### Service 1: User and Palette Management Service
 
 #### Responsibilities
 - Handles user registration, authentication, and profile management.
 - Manages user palettes: creating, modifying, and deleting palettes.
+
+#### Database
+- **Users Table**: Stores user-related information (e.g., user_id, username, password).
+- **Palettes Table**: Stores information about color palettes, including user ownership, color codes, and timestamps.
 
 ### Service 2: Popularity and Recommendation Service
 
@@ -34,6 +40,10 @@ The project consists of two microservices:
 - Handles palette likes and tracks popular palettes.
 - Fetches popular palettes based on likes or views.
 - Provides palette recommendations based on trending palettes or user preferences.
+- Implements **WebSocket** functionality for real-time popularity updates and a dynamic **lobby mechanic**.
+
+#### Database
+- **Likes Table**: Stores palette like information (e.g., user_id, palette_id, liked_at).
 
 ---
 
@@ -48,12 +58,12 @@ The project consists of two microservices:
 ### Service 2: Popularity and Recommendation
 - **Technology**:
   - **Programming Language**: JavaScript (Node.js with Express)
-  - **Communication**: WebSocket for real-time notifications
-  - **Database**: MongoDB (NoSQL for fast access to likes data)
+  - **Communication**: WebSocket for real-time notifications and lobby functionality
+  - **Database**: MongoDB (NoSQL for fast access to likes and popular palettes)
 
 ### Inter-Service Communication
-- Services communicate via REST APIs for synchronous operations.
-- WebSockets for asynchronous real-time updates.
+- Services communicate via **REST APIs** for synchronous operations.
+- **WebSockets** are used for asynchronous real-time updates.
 
 ---
 
@@ -61,48 +71,48 @@ The project consists of two microservices:
 
 ### Database Schemas
 
-#### Users Table
+#### Users Table (User and Palette Management)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
-| user_id        | INT, PK      | Unique user identifier    |
-| username       | VARCHAR      | User's display name       |
-| password_hash   | VARCHAR      | Hashed password           |
-| created_at     | TIMESTAMP     | User registration time    |
+| user_id        | INT, PK      | Unique user identifier     |
+| username       | VARCHAR      | User's display name        |
+| password_hash  | VARCHAR      | Hashed password            |
+| created_at     | TIMESTAMP    | User registration time     |
 
-#### Palettes Table
+#### Palettes Table (User and Palette Management)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
 | palette_id     | INT, PK      | Unique palette identifier  |
-| user_id        | INT, FK      | Foreign key to Users      |
-| color_codes     | JSON         | Array of hex color codes  |
-| created_at     | TIMESTAMP     | Palette creation time     |
-| updated_at     | TIMESTAMP     | Palette update time       |
+| user_id        | INT, FK      | Foreign key to Users       |
+| color_codes    | JSON         | Array of hex color codes   |
+| created_at     | TIMESTAMP    | Palette creation time      |
+| updated_at     | TIMESTAMP    | Palette update time        |
 
-#### Likes Table
+#### Likes Table (Popularity and Recommendation)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
-| like_id        | INT, PK      | Unique like identifier    |
-| palette_id     | INT, FK      | Foreign key to Palettes   |
-| user_id        | INT, FK      | Foreign key to Users      |
-| liked_at       | TIMESTAMP     | Time when liked           |
+| like_id        | INT, PK      | Unique like identifier     |
+| palette_id     | INT, FK      | Foreign key to Palettes    |
+| user_id        | INT, FK      | Foreign key to Users       |
+| liked_at       | TIMESTAMP    | Time when liked            |
 
 ### Endpoints
 
 #### User and Palette Management Service
 | Method | Endpoint               | Description                         | Input                        | Output                                          |
 |--------|------------------------|-------------------------------------|-----------------------------|------------------------------------------------|
-| POST   | `/users/register`      | Register a new user                 | `{username, password}`      | `201 Created` with user details                |
-| POST   | `/palettes`            | Create a new palette                | `{user_id, color_codes}`    | `201 Created` with palette details             |
-| GET    | `/palettes/:id`        | Get palette details by ID           | -                           | Palette details in JSON format                 |
-| PUT    | `/palettes/:id`        | Update a palette                    | `{color_codes}`            | `200 OK` on success; `404 Not Found` if not exists |
-| DELETE | `/palettes/:id`        | Delete palette by ID                | -                           | `204 No Content` on success; `404 Not Found`  |
+| POST   | `/users/register`      | Register a new user                 | `{username, password}`       | `201 Created` with user details                |
+| POST   | `/palettes`            | Create a new palette                | `{user_id, color_codes}`     | `201 Created` with palette details             |
+| GET    | `/palettes/:id`        | Get palette details by ID           | -                            | Palette details in JSON format                 |
+| PUT    | `/palettes/:id`        | Update a palette                    | `{color_codes}`              | `200 OK` on success; `404 Not Found` if not exists |
+| DELETE | `/palettes/:id`        | Delete palette by ID                | -                            | `204 No Content` on success; `404 Not Found`   |
 
 #### Popularity and Recommendation Service
 | Method | Endpoint               | Description                         | Input                        | Output                                          |
 |--------|------------------------|-------------------------------------|-----------------------------|------------------------------------------------|
-| GET    | `/popular`             | Fetch the most popular palettes      | -                           | List of popular palettes in JSON format       |
-| POST   | `/like`                | Like a palette                      | `{palette_id, user_id}`    | `200 OK` on success; `404 Not Found` if not exists |
-| **WebSocket** | `/ws/popularity` | Real-time updates for palettes      | -                           | Live updates on new palettes and popularity     |
+| GET    | `/popular`             | Fetch the most popular palettes      | -                            | List of popular palettes in JSON format        |
+| POST   | `/like`                | Like a palette                      | `{palette_id, user_id}`      | `200 OK` on success; `404 Not Found` if not exists |
+| **WebSocket** | `/ws/popularity` | Real-time updates for palettes      | -                            | Live updates on new palettes and popularity    |
 
 ### Data Format
 All requests and responses will use **JSON** format.
@@ -112,26 +122,34 @@ All requests and responses will use **JSON** format.
 ## Deployment and Scaling
 
 ### Containerization
-- Each service (User and Palette Management, Popularity Service) will be containerized using Docker for ease of deployment and management.
+- Each service (User and Palette Management, Popularity Service) will be containerized using **Docker** for ease of deployment and management.
 
 ### Orchestration
-- Use Kubernetes for managing containers and ensuring horizontal scaling based on traffic.
+- Use **Kubernetes** for managing containers and ensuring horizontal scaling based on traffic.
 
 ### Scaling Strategy
 - Services will scale independently to handle high traffic in palette updates or real-time likes without affecting user authentication.
-- WebSocket communication will also be scaled, with multiple WebSocket servers handling the load.
+- **WebSocket communication** will also be scaled, with multiple WebSocket servers handling the load.
 
 ---
 
-## WebSocket Communication
+## WebSocket Communication (Lobby Mechanic)
 
 ### Public Channels
-- Broadcast new palettes as they are posted.
-- Real-time updates for popular palettes based on the number of likes.
+- Broadcast **new palettes** as they are posted.
+- Provide real-time updates for **popular palettes** based on the number of likes.
 
-### Private Channels
-- Users can create or join private channels for discussion around specific palettes or design topics.
+### Private Channels (Lobby Mechanic)
+- Users can dynamically **create or join private channels** tied to specific palettes or design topics.
+- These channels act as lobbies where multiple users can connect and discuss a palette or a trend in real-time.
+- **Channel Creation**: Channels can be created on-demand when users wish to discuss a palette (e.g., "Palette #123 Discussion").
+- **Multiple Users**: Several users can stay connected within the same channel, and they will receive updates instantly (i.e., real-time chat functionality).
+- **Multiple Dynamic Channels**: The service will allow multiple lobby channels to exist at the same time, scaling based on the number of discussions.
 
-![Architecture d](img/image.png)
+---
+
+## Architecture Diagram
+
+![Architecture](img/image.png)
 
 ---
