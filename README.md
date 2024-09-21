@@ -31,7 +31,7 @@ Each service will have its own dedicated responsibilities and database, ensuring
 - Manages user palettes: creating, modifying, and deleting palettes.
 
 #### Database
-- **Users Table**: Stores user-related information (e.g., user_id, username, password).
+- **Users Table**: Stores user-related information (e.g., `user_id`, `username`, `password`).
 - **Palettes Table**: Stores information about color palettes, including user ownership, color codes, and timestamps.
 
 ### Service 2: Popularity and Recommendation Service
@@ -39,11 +39,13 @@ Each service will have its own dedicated responsibilities and database, ensuring
 #### Responsibilities
 - Handles palette likes and tracks popular palettes.
 - Fetches popular palettes based on likes or views.
+- Fetches popular palettes filtered by categories such as "Business", "Art", or other classifications.
 - Provides palette recommendations based on trending palettes or user preferences.
 - Implements **WebSocket** functionality for real-time popularity updates and a dynamic **lobby mechanic**.
 
 #### Database
-- **Likes Table**: Stores palette like information (e.g., user_id, palette_id, liked_at).
+- **Likes Table**: Stores palette like information (e.g., `user_id`, `palette_id`, `liked_at`).
+- **Palettes Table**: Contains a `category` field to group palettes by type (e.g., Business, Art, Or other categories).
 
 ---
 
@@ -74,45 +76,48 @@ Each service will have its own dedicated responsibilities and database, ensuring
 #### Users Table (User and Palette Management)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
-| user_id        | INT, PK      | Unique user identifier     |
-| username       | VARCHAR      | User's display name        |
-| password_hash  | VARCHAR      | Hashed password            |
-| created_at     | TIMESTAMP    | User registration time     |
+| `user_id`      | INT, PK      | Unique user identifier     |
+| `username`     | VARCHAR      | User's display name        |
+| `password_hash`| VARCHAR      | Hashed password            |
+| `created_at`   | TIMESTAMP    | User registration time     |
 
 #### Palettes Table (User and Palette Management)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
-| palette_id     | INT, PK      | Unique palette identifier  |
-| user_id        | INT, FK      | Foreign key to Users       |
-| color_codes    | JSON         | Array of hex color codes   |
-| created_at     | TIMESTAMP    | Palette creation time      |
-| updated_at     | TIMESTAMP    | Palette update time        |
+| `palette_id`   | INT, PK      | Unique palette identifier  |
+| `user_id`      | INT, FK      | Foreign key to Users       |
+| `color_codes`  | JSON         | Array of hex color codes   |
+| `category`     | VARCHAR      | Palette category (e.g., 'Business', 'Art') |
+| `created_at`   | TIMESTAMP    | Palette creation time      |
+| `updated_at`   | TIMESTAMP    | Palette update time        |
 
 #### Likes Table (Popularity and Recommendation)
 | Field          | Type         | Notes                     |
 |----------------|--------------|---------------------------|
-| like_id        | INT, PK      | Unique like identifier     |
-| palette_id     | INT, FK      | Foreign key to Palettes    |
-| user_id        | INT, FK      | Foreign key to Users       |
-| liked_at       | TIMESTAMP    | Time when liked            |
+| `like_id`      | INT, PK      | Unique like identifier     |
+| `palette_id`   | INT, FK      | Foreign key to Palettes    |
+| `user_id`      | INT, FK      | Foreign key to Users       |
+| `liked_at`     | TIMESTAMP    | Time when liked            |
 
 ### Endpoints
 
 #### User and Palette Management Service
 | Method | Endpoint               | Description                         | Input                        | Output                                          |
-|--------|------------------------|-------------------------------------|-----------------------------|------------------------------------------------|
-| POST   | `/users/register`      | Register a new user                 | `{username, password}`       | `201 Created` with user details                |
-| POST   | `/palettes`            | Create a new palette                | `{user_id, color_codes}`     | `201 Created` with palette details             |
+|--------|------------------------|-------------------------------------|------------------------------|------------------------------------------------|
+| POST   | `/users/register`      | Register a new user                 | `{username, password}`        | `201 Created` with user details                |
+| POST   | `/palettes`            | Create a new palette                | `{user_id, color_codes}`      | `201 Created` with palette details             |
 | GET    | `/palettes/:id`        | Get palette details by ID           | -                            | Palette details in JSON format                 |
-| PUT    | `/palettes/:id`        | Update a palette                    | `{color_codes}`              | `200 OK` on success; `404 Not Found` if not exists |
+| PUT    | `/palettes/:id`        | Update a palette                    | `{color_codes}`               | `200 OK` on success; `404 Not Found` if not exists |
 | DELETE | `/palettes/:id`        | Delete palette by ID                | -                            | `204 No Content` on success; `404 Not Found`   |
 
 #### Popularity and Recommendation Service
-| Method | Endpoint               | Description                         | Input                        | Output                                          |
-|--------|------------------------|-------------------------------------|-----------------------------|------------------------------------------------|
-| GET    | `/popular`             | Fetch the most popular palettes      | -                            | List of popular palettes in JSON format        |
-| POST   | `/like`                | Like a palette                      | `{palette_id, user_id}`      | `200 OK` on success; `404 Not Found` if not exists |
-| **WebSocket** | `/ws/popularity` | Real-time updates for palettes      | -                            | Live updates on new palettes and popularity    |
+| Method       | Endpoint                   | Description                           | Input                             | Output                                          |
+|--------------|----------------------------|---------------------------------------|-----------------------------------|------------------------------------------------|
+| GET          | `/popular`                 | Fetch the most popular palettes       | -                                 | List of popular palettes in JSON format        |
+| GET          | `/popular/:category`       | Fetch popular palettes by category    | `{category}`                      | List of popular palettes within a category     |
+| POST         | `/like`                    | Like a palette                        | `{palette_id, user_id}`           | `200 OK` on success; `404 Not Found` if not exists |
+| **WebSocket**| `/ws/popularity`           | Real-time updates for all palettes    | -                                 | Live updates on new palettes and popularity    |
+| **WebSocket**| `/ws/popularity/:category` | Real-time updates by category         | `{category}`                      | Live updates on popular palettes in a category |
 
 ### Data Format
 All requests and responses will use **JSON** format.
