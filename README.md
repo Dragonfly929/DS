@@ -132,6 +132,6 @@ All requests and responses will use **JSON** format.
 ### Private Channels
 - Users can create or join private channels for discussion around specific palettes or design topics.
 
-![Architecture Diagram](image.png)
+![Architecture d](img/image.png)
 
 ---
