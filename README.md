@@ -177,11 +177,9 @@ All requests and responses will use **JSON** format.
 - **User and Palette Management Service**
   - `POST /users/register` - Register a new user.
   - `POST /palettes` - Create a new palette.
-  - **...** (Complete list in documentation)
 - **Popularity and Recommendation Service**
   - `GET /popular` - Fetch popular palettes.
   - `POST /like` - Like a palette.
-  - **...**
 
 ### Testing with Postman
 1. Import the collection (`color-palette-app.postman_collection.json`).
