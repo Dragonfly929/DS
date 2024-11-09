@@ -283,3 +283,46 @@ ETL will run periodically to gather palette usage data from the operational data
 
 Each of these technologies and patterns contributes to building a scalable, reliable, and high-performing system suitable for the demands of our Color Palette App.
 
+### First Endpoint to Be Accessed
+
+In this project, the **first endpoint to be accessed** is the **user authentication endpoint**. This endpoint allows users to log in and receive an authentication token, which will be used to access the other functionalities of the application.
+
+### Details of the Authentication Endpoint:
+
+#### Endpoint: `/auth/login`
+- **HTTP Method**: `POST`
+- **Description**: This endpoint allows users to log in to the application. Upon successful authentication, a JWT (JSON Web Token) will be returned, which will be used for accessing other secured endpoints.
+  
+#### Required Parameters:
+- **Request Body**:
+  ```json
+  {
+    "username": "desired_username",
+    "password": "desired_password"
+  }
+
+- **Response (Success)**:
+  ```json
+  {
+    "status": "success",
+    "token": "generated_jwt_token"
+  }
+
+- **Response (Error)**:
+  ```json
+  {
+    "status": "error",
+    "message": "Incorrect username or password."
+  }
+
+### Flow Description:
+1. Login: The user sends a POST request to /auth/login with their authentication data (username and password).
+2. Validation: The application validates the credentials (checks if the user exists and if the password is correct).
+3. Token: If authentication is successful, the server responds with a JWT token that will be used for authentication in subsequent requests.
+### Why Is It Important to Access This Endpoint First?
+-  **Authentication** is essential for accessing the application's protected resources. The token received after authentication will be required to interact with other endpoints of the application (e.g., managing color palettes, viewing popularity, etc.).
+- Without a valid token, the user will not be able to access the application, and interactions with other microservices will be restricted.
+
+This is the first step in the user flow and ensures that only authenticated users can interact with the application in a secure manner.
+
+
