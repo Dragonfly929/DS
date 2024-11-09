@@ -1,0 +1,14 @@
+{
+    "name": "popularity-service",
+    "version": "1.0.0",
+    "description": "Popularity and Recommendation Service",
+    "main": "app.js",
+    "dependencies": {
+      "express": "^4.17.1",
+      "axios": "^0.21.1"
+    },
+    "scripts": {
+      "start": "node app.js"
+    }
+  }
+  

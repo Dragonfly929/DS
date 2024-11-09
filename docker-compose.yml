@@ -1,0 +1,136 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database for User and Palette Management
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 929676
+      POSTGRES_DB: user_palette_db
+    ports:
+      - "5432:5432"
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database for Popularity and Recommendation
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7.4.1
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Consul for Service Discovery
+  consul:
+    image: consul:1.10.3
+    container_name: consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: agent -dev -client=0.0.0.0
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8500/v1/status/leader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # User and Palette Management Service
+  user_palette_service:
+    build: ./user_palette_service
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:929676@postgres:5432/user_palette_db
+    networks:
+      - my-network
+    deploy:
+      replicas: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://user_palette_service:8000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Popularity and Recommendation Service
+  popularity_service:
+    build: ./popularity_service
+    expose:
+      - "8001"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    networks:
+      - my-network
+    deploy:
+      replicas: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://popularity_service:8001/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api_gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    depends_on:
+      consul:
+        condition: service_healthy
+      user_palette_service:
+        condition: service_healthy
+      popularity_service:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    networks:
+      - my-network
+    environment:
+      CONSUL_HOST: 'consul'
+      CONSUL_PORT: 8500
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  my-network:
+    driver: bridge

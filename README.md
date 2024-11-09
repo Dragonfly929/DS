@@ -79,7 +79,7 @@ Each service will have its own dedicated responsibilities and database, ensuring
 | `user_id`      | INT, PK      | Unique user identifier     |
 | `username`     | VARCHAR      | User's display name        |
 | `password_hash`| VARCHAR      | Hashed password            |
-| `created_at`   | TIMESTAMP    | User registration time     |
+
 
 #### Palettes Table (User and Palette Management)
 | Field          | Type         | Notes                     |
@@ -158,3 +158,30 @@ All requests and responses will use **JSON** format.
 ![Architecture](img/image.png)
 
 ---
+
+## Architecture Diagram
+
+![Updated Architecture](img/updated_architecture.jpg)
+
+---
+
+### How to Run
+1. **Install Dependencies**
+   - Python 3.12, Node.js 20.10.0, PostgreSQL, MongoDB
+2. **Docker**
+   - Run `docker-compose up` to start all services.
+   - Verify by accessing the `/status` endpoint.
+
+### Endpoints Documentation
+- **User and Palette Management Service**
+  - `POST /users/register` - Register a new user.
+  - `POST /palettes` - Create a new palette.
+  - **...** (Complete list in documentation)
+- **Popularity and Recommendation Service**
+  - `GET /popular` - Fetch popular palettes.
+  - `POST /like` - Like a palette.
+  - **...**
+
+### Testing with Postman
+1. Import the collection (`color-palette-app.postman_collection.json`).
+2. Use the pre-configured requests to test each endpoint.

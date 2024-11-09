@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package popularityservice;
+
+service PopularityService {
+    rpc GetPopularity (PopularityRequest) returns (PopularityResponse);
+}
+
+message PopularityRequest {
+    string user_id = 1;
+}
+
+message PopularityResponse {
+    int32 popularity_score = 1;
+    string message = 2;
+}
