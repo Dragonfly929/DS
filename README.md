@@ -160,7 +160,7 @@ All requests and responses will use **JSON** format.
 
 ---
 
-## Architecture Diagram
+## Updated Architecture Diagram
 
 ![Updated Architecture](img/updated_architecture.jpg)
 
