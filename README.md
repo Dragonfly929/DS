@@ -67,6 +67,7 @@ Each service will have its own dedicated responsibilities and database, ensuring
 - Services communicate via **REST APIs** for synchronous operations.
 - **WebSockets** are used for asynchronous real-time updates.
 
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana) or Prometheus + Grafana
 ---
 
 ## Data Management (Database + Endpoints)
@@ -185,3 +186,102 @@ All requests and responses will use **JSON** format.
 ### Testing with Postman
 1. Import the collection (`color-palette-app.postman_collection.json`).
 2. Use the pre-configured requests to test each endpoint.
+
+# Project Design and Technology Justifications
+
+## Saga vs. Transaction Coordination
+In a microservices architecture, **Saga** and **Two-Phase Commit (2PC)** are two patterns used for ensuring consistency in distributed transactions. 
+
+### Saga Pattern
+The **Saga** pattern breaks down a transaction into a series of smaller, isolated actions that can be rolled back if any fail. This approach is more suitable for microservices since it allows each service to manage its own part of the transaction independently, promoting better fault tolerance and less coupling.
+
+### Why Saga Over 2PC?
+- **Reliability**: Saga supports partial rollbacks, meaning it is easier to handle failures across distributed services.
+- **Scalability**: Saga avoids the locking issues common in 2PC, enabling each service to function independently and scale without tight coupling.
+  
+### Use Case in This Project
+We’ll use the Saga pattern to handle operations that span multiple services, such as when a new palette is created and must be saved across several databases. If a failure occurs, the system can rollback or compensate, ensuring data consistency across services without central locking.
+
+---
+
+## Consistent Hashing
+**Consistent Hashing** is a technique used to distribute requests evenly across a cluster, especially helpful in caching and load balancing. 
+
+### Benefits of Consistent Hashing
+- **Scalability**: It allows the addition or removal of nodes with minimal impact on the system, redistributing only a fraction of the data.
+- **Load Balancing**: Helps to maintain a balanced load across servers, which is essential for high-traffic applications like our real-time popularity service.
+
+### Use Case in This Project
+Consistent hashing will be implemented for caching our popular palettes to improve load distribution. This will ensure that when nodes are added or removed, only a small subset of the cache needs to be reallocated.
+
+---
+
+## User Database Replication (Master-Slave Setup)
+Database replication using a **Master-Slave Setup** is essential for high availability and data redundancy.
+
+### How Master-Slave Replication Works
+In this setup:
+- **Master** database handles all the write operations.
+- **Slave** databases replicate the master’s data and respond to read requests, providing high availability and load balancing for read operations.
+
+### Why Replication?
+- **High Availability**: Ensures that read operations continue smoothly even if one replica goes down.
+- **Improved Performance**: Enables high availability of user data, crucial in case of peak loads, by offloading reads to replicas.
+
+### Use Case in This Project
+This setup will handle user data for authentication and palette storage, distributing read loads across replicas while keeping user data available even in case of server failure.
+
+---
+
+## Staging Area and Data Warehouse
+A **Data Warehouse** provides a structured way to store historical data, while a **Staging Area** allows for temporary storage of data during transformations.
+
+### Why Use a Data Warehouse and Staging Area?
+- **Centralized Data Repository**: The data warehouse allows us to analyze trends in palette popularity over time.
+- **Optimized Reporting**: Prepares data for analytical queries without impacting the transactional database.
+- **Data Cleansing and Transformation**: The staging area allows us to process raw data before it is moved to the warehouse.
+
+### Use Case in This Project
+We will use the staging area and data warehouse to periodically aggregate palette and user interaction data. This will enable trend analysis, insights on user preferences, and improve recommendation algorithms.
+
+---
+
+## The ELK Stack
+The **ELK Stack** (Elasticsearch, Logstash, and Kibana) is a powerful logging and monitoring tool that aggregates and visualizes logs from all services.
+
+### Why ELK Stack?
+- **Centralized Logging**: Collects logs from each service and stores them centrally, simplifying debugging.
+- **Real-Time Analytics**: Elasticsearch enables quick searches across logs, and Kibana visualizes log patterns and anomalies.
+- **Troubleshooting and Monitoring**: Provides real-time alerts, helping in identifying and resolving issues before they impact users.
+
+### Use Case in This Project
+The ELK stack will aggregate logs from the User and Palette Management and Popularity Services, helping us monitor real-time application health, debug errors, and proactively address issues.
+
+---
+
+## Data Sharding
+**Data Sharding** involves splitting a database horizontally to distribute data across multiple databases or tables, which is particularly helpful for scalability.
+
+### Benefits of Data Sharding
+- **Scalability**: Reduces the load on a single database by distributing data, thus improving performance.
+- **Efficiency**: Each shard contains a subset of data, which allows faster access times and resource optimization.
+
+### Use Case in This Project
+We’ll implement sharding for the Popularity and Recommendation Service’s MongoDB database to handle large volumes of data, such as likes, views, and palette popularity, ensuring fast and efficient access even as data grows.
+
+---
+
+## ETL Processes
+**ETL (Extract, Transform, Load)** is a process that extracts data from source systems, transforms it for analysis, and loads it into a data warehouse.
+
+### Why Use ETL?
+- **Data Transformation**: Cleans and processes data, making it ready for analytics.
+- **Centralized Data Storage**: Consolidates data from various sources into a unified database, providing an overview of the system’s performance and user behavior.
+  
+### Use Case in This Project
+ETL will run periodically to gather palette usage data from the operational databases, transform it, and load it into the data warehouse. This supports our analytics needs, helping us optimize recommendations and track trends.
+
+---
+
+Each of these technologies and patterns contributes to building a scalable, reliable, and high-performing system suitable for the demands of our Color Palette App.
+
